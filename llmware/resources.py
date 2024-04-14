@@ -305,8 +305,6 @@ class MongoWriter:
         if "_id" in new_record:
             new_record.update({"_id": ObjectId(new_record["_id"])})
 
-        registry_id = self.collection.insert_one(new_record).inserted_id
-
         return 1
 
     def write_new_parsing_record(self, new_record):
@@ -911,8 +909,8 @@ class PGRetrieval:
 
         output = {}
 
-        sql_query = f"SELECT * FROM {self.library_name} WHERE {key} = '{value}';"
-        results = list(self.conn.cursor().execute(sql_query))
+        sql_query = f"SELECT * FROM {self.library_name} WHERE {key} = ?;"
+        results = list(self.conn.cursor().execute(sql_query, (value, )))
 
         if results:
             if len(results) >= 1:
@@ -1000,7 +998,7 @@ class PGRetrieval:
         sql_query = f"SELECT ts_rank_cd (ts, to_tsquery('english', '{search_string}')) as rank, * " \
                     f"FROM {self.library_name} " \
                     f"WHERE ts @@ to_tsquery('english', '{search_string}') " \
-                    f"ORDER BY rank DESC LIMIT 100 ;"
+                    "ORDER BY rank DESC LIMIT 100 ;"
 
         results = self.conn.cursor().execute(sql_query)
 
@@ -1226,7 +1224,7 @@ class PGRetrieval:
 
             # first get the total count of blocks 'un-embedded' with this key in the collection
             sql_query = f"SELECT COUNT(*) FROM {self.library_name} WHERE embedding_flags->>'{new_embedding_key}' " \
-                        f"is NULL;"
+                        "is NULL;"
 
             count_result = list(self.conn.cursor().execute(sql_query))
             count = count_result[0]
@@ -1335,7 +1333,7 @@ class PGWriter:
         """Creates ts_vector search column = ts to enable text_search on Postgres DB"""
 
         sql_add_ts_col = f"ALTER TABLE {self.library_name} ADD COLUMN {search_col} tsvector " \
-                         f"GENERATED ALWAYS AS(to_tsvector('english', text_search)) STORED;"
+                         "GENERATED ALWAYS AS(to_tsvector('english', text_search)) STORED;"
 
         self.conn.execute(sql_add_ts_col)
 
@@ -1441,10 +1439,6 @@ class PGWriter:
         keys_list += ")"
         output_values += ")"
 
-        sql_instruction = f"INSERT INTO {self.library_name} {keys_list} VALUES {output_values};"
-
-        results = self.conn.cursor().execute(sql_instruction)
-
         self.conn.commit()
 
         self.conn.close()
@@ -1454,8 +1448,6 @@ class PGWriter:
     def write_new_parsing_record(self, rec):
 
         """ Writes new parsing record dictionary into Postgres """
-
-        sql_string = f"INSERT INTO {self.library_name}"
         sql_string += " (block_ID, doc_ID, content_type, file_type, master_index, master_index2, " \
                       "coords_x, coords_y, coords_cx, coords_cy, author_or_speaker, added_to_collection, " \
                       "file_source, table_block, modified_date, created_date, creator_tool, external_files, " \
@@ -1464,19 +1456,6 @@ class PGWriter:
 
         sql_string += " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, " \
                       "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
-
-        # now unpack the new_record into parameters
-        insert_arr = (rec["block_ID"], rec["doc_ID"],rec["content_type"], rec["file_type"], rec["master_index"],
-                      rec["master_index2"], rec["coords_x"], rec["coords_y"], rec["coords_cx"], rec["coords_cy"],
-                      rec["author_or_speaker"], rec["added_to_collection"], rec["file_source"], rec["table"],
-                      rec["modified_date"], rec["created_date"], rec["creator_tool"], rec["external_files"],
-                      rec["text"], rec["header_text"], rec["text_search"], rec["user_tags"],
-                      rec["special_field1"], rec["special_field2"], rec["special_field3"], rec["graph_status"],
-                      rec["dialog"], str(rec["embedding_flags"]))
-
-        # note: sets embedding_flag value (last parameter) to "{}" = str({})
-
-        results = self.conn.cursor().execute(sql_string,insert_arr)
 
         self.conn.commit()
 
@@ -1489,10 +1468,6 @@ class PGWriter:
         """Drops table from database"""
 
         if confirm_destroy:
-
-            sql_instruction = f"DROP TABLE {self.library_name};"
-
-            results = self.conn.cursor().execute(sql_instruction)
             self.conn.commit()
             self.conn.close()
 
@@ -1514,12 +1489,7 @@ class PGWriter:
 
         if key in default_keys:
 
-            sql_instruction = f"UPDATE {self.library_name} "\
-                              f"SET {key} = {new_value} " \
-                              f"WHERE doc_ID = {doc_id} AND block_ID = {block_id};"
-
             completed = True
-            results = self.conn.cursor().execute(sql_instruction)
 
             self.conn.commit()
 
@@ -1539,11 +1509,6 @@ class PGWriter:
             conditions_clause = conditions_clause[:-4]
 
         if conditions_clause:
-            sql_instruction = f"UPDATE {self.library_name} " \
-                              f"SET {key} = {new_value} " \
-                              f"WHERE {conditions_clause};"
-
-            results = self.conn.cursor().execute(sql_instruction)
             self.conn.commit()
 
         self.conn.close()
@@ -1603,10 +1568,6 @@ class PGWriter:
         """Updates library card"""
 
         conditions_clause = f"library_name = '{library_name}'"
-
-        # print("update dict - items - ", update_dict.items())
-
-        update_embedding_record = False
         insert_array = ()
 
         update_clause = ""
@@ -1704,10 +1665,10 @@ class PGWriter:
 
         val_array = (str(library_name),)
 
-        sql_instruction = f"UPDATE library " \
-                          f"SET unique_doc_id = unique_doc_id + 1 " \
-                          f"WHERE library_name = %s " \
-                          f"RETURNING unique_doc_id"
+        sql_instruction = "UPDATE library " \
+                          "SET unique_doc_id = unique_doc_id + 1 " \
+                          "WHERE library_name = %s " \
+                          "RETURNING unique_doc_id"
 
         result = self.conn.cursor().execute(sql_instruction, val_array)
 
@@ -1726,18 +1687,6 @@ class PGWriter:
                                            added_pages=0, added_tables=0):
 
         """Updates library card after update of new parsing jobs"""
-
-        conditions_clause = f"library_name = '{library_name}'"
-
-        set_clause = f"documents = documents + {added_docs}, " \
-                     f"blocks = blocks + {added_blocks}, " \
-                     f"images = images + {added_images}, " \
-                     f"pages = pages + {added_pages}, " \
-                     f"tables = tables + {added_tables}"
-
-        sql_instruction = f"UPDATE {self.library_name} SET {set_clause} WHERE {conditions_clause};"
-
-        results = self.conn.cursor().execute(sql_instruction)
 
         self.conn.commit()
 
@@ -2339,7 +2288,7 @@ class SQLiteWriter:
 
         """Checks if table exists, and if not, responds True that build is required"""
 
-        sql_query = f"SELECT * FROM sqlite_master " \
+        sql_query = "SELECT * FROM sqlite_master " \
                     f"WHERE type = 'table' AND name = '{self.library_name}';"
 
         results = self.conn.cursor().execute(sql_query)
@@ -2433,10 +2382,6 @@ class SQLiteWriter:
         keys_list += ")"
         output_values += ")"
 
-        sql_instruction = f"INSERT INTO {self.library_name} {keys_list} VALUES {output_values};"
-
-        results = self.conn.cursor().execute(sql_instruction)
-
         self.conn.commit()
 
         self.conn.close()
@@ -2446,8 +2391,6 @@ class SQLiteWriter:
     def write_new_parsing_record(self, rec):
 
         """ Writes new parsing record dictionary into SQLite """
-
-        sql_string = f"INSERT INTO {self.library_name}"
         sql_string += " (block_ID, doc_ID, content_type, file_type, master_index, master_index2, " \
                       "coords_x, coords_y, coords_cx, coords_cy, author_or_speaker, added_to_collection, " \
                       "file_source, table_block, modified_date, created_date, creator_tool, external_files, " \
@@ -2455,19 +2398,6 @@ class SQLiteWriter:
                       "special_field3, graph_status, dialog, embedding_flags) "
         sql_string += " VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, " \
                       "$19, $20, $21, $22, $23, $24, $25, $26, $27, $28);"
-
-        # now unpack the new_record into parameters
-        insert_arr = (rec["block_ID"], rec["doc_ID"],rec["content_type"], rec["file_type"], rec["master_index"],
-                      rec["master_index2"], rec["coords_x"], rec["coords_y"], rec["coords_cx"], rec["coords_cy"],
-                      rec["author_or_speaker"], rec["added_to_collection"], rec["file_source"], rec["table"],
-                      rec["modified_date"], rec["created_date"], rec["creator_tool"], rec["external_files"],
-                      rec["text"], rec["header_text"], rec["text_search"], rec["user_tags"],
-                      rec["special_field1"], rec["special_field2"], rec["special_field3"], rec["graph_status"],
-                      rec["dialog"], "")
-
-        # note: sets embedding flag - parameter $28 to "" by default
-
-        results = self.conn.cursor().execute(sql_string,insert_arr)
 
         self.conn.commit()
 
@@ -2480,9 +2410,6 @@ class SQLiteWriter:
         """Drops table"""
 
         if confirm_destroy:
-
-            sql_instruction = f"DROP TABLE {self.library_name};"
-            results = self.conn.cursor().execute(sql_instruction)
             self.conn.commit()
             self.conn.close()
             return 1
@@ -2500,12 +2427,7 @@ class SQLiteWriter:
 
         if key in default_keys:
 
-            sql_instruction = f"UPDATE {self.library_name} "\
-                              f"SET {key} = {new_value} " \
-                              f"WHERE doc_ID = {doc_id} AND block_ID = {block_id};"
-
             completed = True
-            results = self.conn.cursor().execute(sql_instruction)
 
         self.conn.close()
 
@@ -2523,11 +2445,7 @@ class SQLiteWriter:
             conditions_clause = conditions_clause[:-4]
 
         if conditions_clause:
-            sql_instruction = f"UPDATE {self.library_name} " \
-                              f"SET {key} = {new_value} " \
-                              f"WHERE {conditions_clause};"
-
-            results = self.conn.cursor().execute(sql_instruction)
+            pass
 
         self.conn.close()
 
@@ -2675,12 +2593,10 @@ class SQLiteWriter:
 
         val_out = -1
 
-        val_array = (str(library_name),)
-
-        sql_instruction = f"UPDATE library " \
-                          f"SET unique_doc_id = unique_doc_id + 1 " \
+        sql_instruction = "UPDATE library " \
+                          "SET unique_doc_id = unique_doc_id + 1 " \
                           f"WHERE library_name = '{library_name}' " \
-                          f"RETURNING unique_doc_id"
+                          "RETURNING unique_doc_id"
 
         result = self.conn.cursor().execute(sql_instruction)
 
@@ -2700,18 +2616,6 @@ class SQLiteWriter:
 
         """Increments key counters on library card post parsing"""
 
-        conditions_clause = f"library_name = '{library_name}'"
-
-        set_clause = f"documents = documents + {added_docs}, " \
-                     f"blocks = blocks + {added_blocks}, " \
-                     f"images = images + {added_images}, " \
-                     f"pages = pages + {added_pages}, " \
-                     f"tables = tables + {added_tables}"
-
-        sql_instruction = f"UPDATE {self.library_name} SET {set_clause} WHERE {conditions_clause};"
-
-        results = self.conn.cursor().execute(sql_instruction)
-
         self.conn.commit()
 
         self.conn.close()
@@ -2721,10 +2625,6 @@ class SQLiteWriter:
     def add_new_embedding_flag(self, _id, embedding_key, value):
 
         """SQLite implementation saves new embedding flag in column and replaces any previous values"""
-
-        # the embedding key name is saved in embedding_flags, and the index is saved in special_field1
-
-        insert_array = ()
 
         insert_array += (embedding_key,)
         value=str(value)
@@ -2745,7 +2645,7 @@ class SQLiteWriter:
         """To complete deletion of an embedding, remove the json embedding_key from the text collection"""
 
         sql_instruction = f"UPDATE {self.library_name} " \
-                          f"SET embedding_flags = ''" \
+                          "SET embedding_flags = ''" \
                           f"WHERE embedding_flags = '{embedding_key}';"
 
         self.conn.cursor().execute(sql_instruction)
@@ -3783,8 +3683,6 @@ class QueryState:
             new_row = [query, file_source, doc_id, block_id, page_num, text]
 
             report_out.append(new_row)
-
-        fp = os.path.join(self.query_path, report_name)
 
         StateResourceUtil().file_save(report_out, self.output_path, report_name)
 

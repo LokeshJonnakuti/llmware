@@ -95,7 +95,7 @@ class LLMfx:
         self.journal = []
         self.step = 0
 
-        journal_update = f"creating object - ready to start processing."
+        journal_update = "creating object - ready to start processing."
         self.write_to_journal(journal_update)
 
         self.tools_deployed = []
@@ -126,7 +126,7 @@ class LLMfx:
         self.work_queue = []
         self.work_iteration = 0
 
-        journal_update = f"clearing work queue - reset"
+        journal_update = "clearing work queue - reset"
         self.write_to_journal(journal_update)
 
         return True
@@ -159,7 +159,7 @@ class LLMfx:
             output_value = self.work_iteration
             journal_update = f"incrementing work iteration to entry - {str(self.work_iteration)}"
         else:
-            journal_update = f"completed all work processing"
+            journal_update = "completed all work processing"
             output_value = None
 
         self.write_to_journal(journal_update)
@@ -337,7 +337,7 @@ class LLMfx:
         follow_up_list = []
 
         if not key:
-            journal_update = f"building follow-up_list - looking for distinct work items\n"
+            journal_update = "building follow-up_list - looking for distinct work items\n"
         else:
             journal_update = f"building follow_up_list - looking for {key} - {value}\n"
 
@@ -380,8 +380,6 @@ class LLMfx:
                 if key in response["llm_response"]:
                     if value in response["llm_response"][key]:
                         output_list.append(response)
-
-                        cl = response["confidence_score"]
                         text = response["work_item"]["text"]
                         step = response["step"]
 
@@ -517,7 +515,7 @@ class LLMfx:
                     value_output.update({"llm_response": llm_response,"dict_output": dict_output})
 
                     # start journaling update
-                    journal_update = f"executing function call - " \
+                    journal_update = "executing function call - " \
                                      f"getting response - {tool_type}\n"
                     journal_update += f"\t\t\t\t -- llm_response - {str(llm_response)}\n"
                     journal_update += f"\t\t\t\t -- output type - {output_type}\n"
@@ -777,7 +775,7 @@ class LLMfx:
 
         inference = getattr(model, "inference")
 
-        journal_update = f"executing function call - deploying - question-answer tool "
+        journal_update = "executing function call - deploying - question-answer tool "
         self.write_to_journal(journal_update)
 
         if context:
@@ -803,10 +801,10 @@ class LLMfx:
         self.inference_calls += 1
 
         # start journaling update
-        journal_update = f"executing function call - " \
+        journal_update = "executing function call - " \
                          f"getting response - question - {answer_key}\n"
         journal_update += f"\t\t\t\t -- llm_response - {str(llm_response)}\n"
-        journal_update += f"\t\t\t\t -- output type - text\n"
+        journal_update += "\t\t\t\t -- output type - text\n"
         journal_update += f"\t\t\t\t -- usage - {usage}"
 
         self.write_to_journal(journal_update)
@@ -859,7 +857,7 @@ class LLMfx:
         work_iter = self.work_iteration
 
         # initial journal update
-        journal_update = f"executing function call - deploying - text-to-sql\n"
+        journal_update = "executing function call - deploying - text-to-sql\n"
         journal_update += f"\t\t\t\t -- query - {query}\n"
         journal_update += f"\t\t\t\t -- table_schema - {table_schema}"
         self.write_to_journal(journal_update)
@@ -877,9 +875,9 @@ class LLMfx:
         self.inference_calls += 1
 
         # start journaling update
-        journal_update = f"executing function call - getting response - sql\n"
+        journal_update = "executing function call - getting response - sql\n"
         journal_update += f"\t\t\t\t -- llm_response - {str(llm_response)}\n"
-        journal_update += f"\t\t\t\t -- output type - text\n"
+        journal_update += "\t\t\t\t -- output type - text\n"
         journal_update += f"\t\t\t\t -- usage - {usage}"
 
         self.write_to_journal(journal_update)
@@ -934,7 +932,7 @@ class LLMfx:
         sql_db_name = sql_db.db_file
 
         # initial journal update
-        journal_update = f"executing research call - executing query on db\n"
+        journal_update = "executing research call - executing query on db\n"
         journal_update += f"\t\t\t\t -- db - {sql_db_name}\n"
         journal_update += f"\t\t\t\t -- sql_query - {sql_query}"
         self.write_to_journal(journal_update)
@@ -953,7 +951,7 @@ class LLMfx:
         self.research_list.append(result)
 
         # start journaling update
-        journal_update = f"executing research  - getting response - sql\n"
+        journal_update = "executing research  - getting response - sql\n"
         journal_update += f"\t\t\t\t -- result - {str(output)}"
         # journal_update += f"\t\t\t\t -- output type - text"
 
@@ -1068,9 +1066,9 @@ class SQLTables:
 
         table_schema = ""
 
-        sql_query = f"SELECT * FROM sqlite_master WHERE type = 'table' AND name = '{table_name}';"
+        sql_query = "SELECT * FROM sqlite_master WHERE type = 'table' AND name = ?;"
 
-        table_schema_row = self.conn.cursor().execute(sql_query)
+        table_schema_row = self.conn.cursor().execute(sql_query, (table_name, ))
         table_schema_row = list(table_schema_row)
 
         if len(table_schema_row) > 0:
@@ -1125,9 +1123,6 @@ class SQLTables:
         """ Deletes a table on the experimental db """
 
         if confirm_delete:
-
-            sql_instruction = f"DROP TABLE {table_name};"
-            results = self.conn.cursor().execute(sql_instruction)
             self.conn.commit()
             logging.warning("update: delete sqlite experimental db - table - %s ", table_name)
 
@@ -1181,7 +1176,6 @@ class SQLTables:
 
         if len(output) > 1:
             header_row = output[0]
-            test_row = output[1]
 
         keys_list = "("
 
@@ -1189,7 +1183,6 @@ class SQLTables:
         for i, entry in enumerate(header_row):
             col_name = re.sub("[\xfe\xff]","",entry)
             try:
-                test_int = int(test_row[i])
                 type="integer"
             except:
                 type="text"
@@ -1261,10 +1254,6 @@ class SQLTables:
         else:
             print("update: table exists - getting column names")
             column_names = self.get_column_names(table_name)
-
-        # insert records
-
-        new_record = ""
         for i in range(1, len(output)):
 
             # print("update: inserting new record - ", i, output[i])
