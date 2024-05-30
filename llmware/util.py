@@ -1332,7 +1332,7 @@ class WikiKnowledgeBase:
         headers = {'User-Agent': self.user_agent}
 
         try:
-            r = requests.get(self.wiki_search_api_url, params=search_params, headers=headers, verify=False)
+            r = requests.get(self.wiki_search_api_url, params=search_params, headers=headers, verify=True)
 
             for i, title in enumerate(r.json()["query"]["search"]):
 
