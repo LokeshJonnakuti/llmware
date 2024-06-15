@@ -24,7 +24,6 @@ import logging
 import json
 import numpy as np
 import os
-import re
 import requests
 import tempfile
 import ast
@@ -38,12 +37,6 @@ from tqdm.autonotebook import trange
 import math
 
 import torch.utils.checkpoint
-
-#   start - imports for ctransformers
-from functools import partial
-import platform
-from ctypes import CDLL, c_bool, c_int, c_float, c_char_p, c_void_p, POINTER, Structure
-from pathlib import Path
 #   end - imports for ctransformers
 
 # new imports
@@ -61,6 +54,7 @@ from llmware.model_configs import (global_model_repo_catalog_list, global_model_
 
 from llmware.gguf_configs import *
 from llmware.gguf_configs import _LlamaModel, _LlamaContext, _LlamaBatch, _LlamaTokenDataArray
+from security import safe_requests
 
 
 class _ModelRegistry:
@@ -1923,7 +1917,7 @@ class OllamaModel:
 
         """ Calls Ollama endpoint for discovery of available models and their locations. """
 
-        response = requests.get(self.uri+"tags")
+        response = safe_requests.get(self.uri+"tags")
 
         logging.info("update: OllamaModel - discover_models - %s ", response.text)
 
@@ -2511,9 +2505,7 @@ class GoogleGenModel:
                 self.target_requested_output_tokens = inference_dict["max_tokens"]
 
         try:
-            from vertexai.preview.language_models import TextGenerationModel, TextEmbeddingModel
-            from vertexai import init
-            import google.cloud.aiplatform as aiplatform
+            from vertexai.preview.language_models import TextGenerationModel
         except ImportError:
             raise DependencyNotInstalledException("google-cloud-aiplatform")
 
@@ -3502,9 +3494,7 @@ class GoogleEmbeddingModel:
         embeddings_output = []
 
         try:
-            from vertexai.preview.language_models import TextGenerationModel, TextEmbeddingModel
-            from vertexai import init
-            import google.cloud.aiplatform as aiplatform
+            from vertexai.preview.language_models import TextEmbeddingModel
         except ImportError:
             raise DependencyNotInstalledException("google-cloud-aiplatform")
 
@@ -6309,7 +6299,7 @@ class LLMWareInferenceServer:
         # if inference server started, then try to get flask dependency
         try:
             global flask
-            from flask import Flask, request, jsonify
+            from flask import Flask
         except:
             raise DependencyNotInstalledException("flask")
 
@@ -6351,7 +6341,7 @@ class LLMWareInferenceServer:
 
         # if inference server started, then try to get flask dependency
         try:
-            from flask import Flask, request, jsonify
+            from flask import request, jsonify
         except:
             raise DependencyNotInstalledException("flask")
 

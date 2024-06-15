@@ -27,7 +27,6 @@ import os
 import random
 import urllib.parse
 import platform
-import sysconfig
 from pathlib import Path
 # from PIL import Image
 import json
@@ -40,7 +39,6 @@ from datetime import datetime
 import time
 from ctypes import *
 import logging
-import requests
 import uuid
 
 
@@ -49,9 +47,9 @@ import yfinance
 
 from llmware.resources import CollectionRetrieval, PromptState, CloudBucketManager
 from llmware.configs import LLMWareConfig
-from llmware.exceptions import ModelNotFoundException, DependencyNotInstalledException, \
-    FilePathDoesNotExistException, LibraryObjectNotFoundException, DatasetTypeNotFoundException, \
+from llmware.exceptions import ModelNotFoundException, FilePathDoesNotExistException, LibraryObjectNotFoundException, DatasetTypeNotFoundException, \
     ModuleNotFoundException
+from security import safe_requests
 
 
 class Utilities:
@@ -1332,7 +1330,7 @@ class WikiKnowledgeBase:
         headers = {'User-Agent': self.user_agent}
 
         try:
-            r = requests.get(self.wiki_search_api_url, params=search_params, headers=headers, verify=False)
+            r = safe_requests.get(self.wiki_search_api_url, params=search_params, headers=headers, verify=False)
 
             for i, title in enumerate(r.json()["query"]["search"]):
 
