@@ -35,7 +35,6 @@ import csv
 import uuid
 import re
 from datetime import datetime
-import random
 import logging
 from pymongo.errors import ConnectionFailure
 
@@ -46,6 +45,7 @@ from llmware.exceptions import LibraryNotFoundException, UnsupportedCollectionDa
 # new imports
 import sqlite3
 import psycopg
+import secrets
 
 
 class CollectionRetrieval:
@@ -3159,7 +3159,7 @@ class ParserState:
             elif mode == "uuid":
                 self.parse_job_id = str(StateResourceUtil().get_uuid())
             elif mode == "random_number":
-                self.parse_job_id = str(random.randint(1000000, 9999999))
+                self.parse_job_id = str(secrets.SystemRandom().randint(1000000, 9999999))
 
         return self.parse_job_id
 
@@ -3268,7 +3268,7 @@ class PromptState:
             elif mode == "uuid":
                 self.prompt.prompt_id = str(StateResourceUtil().get_uuid())
             elif mode == "random_number":
-                self.prompt.prompt_id = str(random.randint(1000000, 9999999))
+                self.prompt.prompt_id = str(secrets.SystemRandom().randint(1000000, 9999999))
 
         return self.prompt.prompt_id
 
@@ -3647,7 +3647,7 @@ class QueryState:
             elif mode == "uuid":
                 custom_id = StateResourceUtil().get_uuid()
             elif mode == "random_number":
-                custom_id = str(random.randint(1000000, 9999999))
+                custom_id = str(secrets.SystemRandom().randint(1000000, 9999999))
 
         return custom_id
 

@@ -33,7 +33,6 @@ from pytesseract.pytesseract import TesseractNotFoundError
 from pdf2image import convert_from_path
 from pdf2image.exceptions import PDFInfoNotInstalledError
 import logging
-import random
 from ctypes import *
 import platform
 
@@ -43,6 +42,7 @@ from llmware.resources import CollectionRetrieval, CollectionWriter, ParserState
 
 from llmware.exceptions import DependencyNotInstalledException, FilePathDoesNotExistException, \
     OCRDependenciesNotFoundException, LLMWareException
+import secrets
 
 
 class Parser:
@@ -2158,7 +2158,7 @@ class Parser:
         running_links = ""
         file_type = "html"
 
-        file_source = str(random.randint(100000, 999999)) + "_" + website.url_main.split(".")[-2] + ".html"
+        file_source = str(secrets.SystemRandom().randint(100000, 999999)) + "_" + website.url_main.split(".")[-2] + ".html"
         # file_source = website.url_main.split(".")[-2] + ".html"
 
         meta = {"author": "", "modified_date": "", "created_date": "", "creator_tool": ""}
@@ -2260,7 +2260,7 @@ class Parser:
         # apply secure_filename to remove any extra "/"
         secure_url_name = secure_filename(website.url_main.split(".")[-2])
 
-        out_name = str(random.randint(100000, 999999)) + "_" + secure_url_name + ".html"
+        out_name = str(secrets.SystemRandom().randint(100000, 999999)) + "_" + secure_url_name + ".html"
 
         if self.library:
             upload_fp = self.library.file_copy_path
