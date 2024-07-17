@@ -1923,7 +1923,7 @@ class OllamaModel:
 
         """ Calls Ollama endpoint for discovery of available models and their locations. """
 
-        response = requests.get(self.uri+"tags")
+        response = requests.get(self.uri+"tags", timeout=60)
 
         logging.info("update: OllamaModel - discover_models - %s ", response.text)
 
@@ -1973,7 +1973,7 @@ class OllamaModel:
 
                 response = requests.post(uri,
                                          json={"model": self.model_name,
-                                               "messages": messages, "stream": self.stream_mode})
+                                               "messages": messages, "stream": self.stream_mode}, timeout=60)
 
                 logging.info("update: OllamaModel response - chat - %s ", response.text)
 
@@ -2015,7 +2015,7 @@ class OllamaModel:
                 params = {"model": self.model_name, "prompt": prompt_final, "stream": self.stream_mode}
 
                 # response = requests.post("http://localhost:11434/api/generate", json=params)
-                response = requests.post(self.uri+"generate", json=params)
+                response = requests.post(self.uri+"generate", json=params, timeout=60)
 
                 output = json.loads(response.text)
 
@@ -3039,7 +3039,7 @@ class AIBReadGPTModel:
 
         try:
             # linked to TEST SERVER
-            output = requests.post(os.environ.get("AIB_READ_GPT_URI"), data=params)
+            output = requests.post(os.environ.get("AIB_READ_GPT_URI"), data=params, timeout=60)
             output_dict_new = ast.literal_eval(output.text)
             success_path = 1
 
@@ -3205,7 +3205,7 @@ class LLMWareModel:
 
         try:
 
-            output = requests.post(os.environ.get("LLMWARE_GPT_URI"), data=params)
+            output = requests.post(os.environ.get("LLMWARE_GPT_URI"), data=params, timeout=60)
             output_dict_new = ast.literal_eval(output.text)
             success_path = 1
             output_response = output_dict_new
