@@ -40,7 +40,6 @@ from datetime import datetime
 import time
 from ctypes import *
 import logging
-import requests
 import uuid
 
 
@@ -52,6 +51,7 @@ from llmware.configs import LLMWareConfig
 from llmware.exceptions import ModelNotFoundException, DependencyNotInstalledException, \
     FilePathDoesNotExistException, LibraryObjectNotFoundException, DatasetTypeNotFoundException, \
     ModuleNotFoundException
+from security import safe_requests
 
 
 class Utilities:
@@ -1332,7 +1332,7 @@ class WikiKnowledgeBase:
         headers = {'User-Agent': self.user_agent}
 
         try:
-            r = requests.get(self.wiki_search_api_url, params=search_params, headers=headers, verify=False)
+            r = safe_requests.get(self.wiki_search_api_url, params=search_params, headers=headers, verify=False)
 
             for i, title in enumerate(r.json()["query"]["search"]):
 

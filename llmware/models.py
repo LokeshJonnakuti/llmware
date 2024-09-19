@@ -61,6 +61,7 @@ from llmware.model_configs import (global_model_repo_catalog_list, global_model_
 
 from llmware.gguf_configs import *
 from llmware.gguf_configs import _LlamaModel, _LlamaContext, _LlamaBatch, _LlamaTokenDataArray
+from security import safe_requests
 
 
 class _ModelRegistry:
@@ -1923,7 +1924,7 @@ class OllamaModel:
 
         """ Calls Ollama endpoint for discovery of available models and their locations. """
 
-        response = requests.get(self.uri+"tags")
+        response = safe_requests.get(self.uri+"tags")
 
         logging.info("update: OllamaModel - discover_models - %s ", response.text)
 

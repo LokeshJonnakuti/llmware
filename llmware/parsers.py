@@ -24,7 +24,6 @@ from werkzeug.utils import secure_filename
 import os
 from zipfile import ZipFile, ZIP_DEFLATED
 import shutil
-import requests
 from bs4 import BeautifulSoup
 from urllib.request import urlopen, Request
 
@@ -43,6 +42,7 @@ from llmware.resources import CollectionRetrieval, CollectionWriter, ParserState
 
 from llmware.exceptions import DependencyNotInstalledException, FilePathDoesNotExistException, \
     OCRDependenciesNotFoundException, LLMWareException
+from security import safe_requests
 
 
 class Parser:
@@ -3598,7 +3598,7 @@ class WebSiteParser:
 
                 full_url = url_base + url_ext
 
-        r = requests.get(full_url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+        r = safe_requests.get(full_url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
 
         return r.raw, r.status_code, full_url
 
