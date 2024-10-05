@@ -24,7 +24,6 @@ import csv
 from collections import Counter
 import sys
 import os
-import random
 import urllib.parse
 import platform
 import sysconfig
@@ -52,6 +51,7 @@ from llmware.configs import LLMWareConfig
 from llmware.exceptions import ModelNotFoundException, DependencyNotInstalledException, \
     FilePathDoesNotExistException, LibraryObjectNotFoundException, DatasetTypeNotFoundException, \
     ModuleNotFoundException
+import secrets
 
 
 class Utilities:
@@ -365,7 +365,7 @@ class Utilities:
                 # cap len of filename at 240
                 filename_in = fn_base[0:240] + "." + ext
 
-            fn_out = str(random.randint(100000, 999999)) + "_" + filename_in
+            fn_out = str(secrets.SystemRandom().randint(100000, 999999)) + "_" + filename_in
 
         else:
             success_code = -1
@@ -535,9 +535,9 @@ class Utilities:
 
         label_id = []
         for x in input_sentence:
-            r = random.randint(1,100)
+            r = secrets.SystemRandom().randint(1,100)
             if r <= (mlm_prob * 100):
-                r2 = random.randint(1,10)
+                r2 = secrets.SystemRandom().randint(1,10)
                 if r2 <= 10:
                     label_id.append(mask_token_value)
             else:
@@ -2921,9 +2921,9 @@ class Datasets:
             train_file.append(new_row)
 
         if len(train_file) > sample_range:
-            r = random.randint(0, sample_range)
+            r = secrets.SystemRandom().randint(0, sample_range)
         else:
-            r = random.randint(0, len(train_file) - 1)
+            r = secrets.SystemRandom().randint(0, len(train_file) - 1)
 
         ds_sample = train_file[r]
 
@@ -2945,7 +2945,7 @@ class Datasets:
                 ds_id = str(Utilities().get_uuid())
 
             elif mode == "random_number":
-                ds_id = str(random.randint(1000000, 9999999))
+                ds_id = str(secrets.SystemRandom().randint(1000000, 9999999))
 
         # create new dataset specific folder
         self.current_ds_name = self.ds_base_name + ds_id
@@ -4170,7 +4170,7 @@ class Datasets:
                 # split the sample
                 text_tokens = self.tokenize_text(text_sample)
                 tok_count = len(text_tokens)
-                r = random.randint(0, tok_count-1)
+                r = secrets.SystemRandom().randint(0, tok_count-1)
                 t1 = self.tokenizer.decode(text_tokens[0:r])
                 t2 = self.tokenizer.decode(text_tokens[r:])
 
@@ -4233,7 +4233,7 @@ class Datasets:
                         # split the sample
                         text_tokens = self.tokenize_text(text_sample)
                         tok_count = len(text_tokens)
-                        r = random.randint(0, tok_count - 1)
+                        r = secrets.SystemRandom().randint(0, tok_count - 1)
                         t1 = self.tokenizer.decode(text_tokens[0:r])
                         t2 = self.tokenizer.decode(text_tokens[r:])
 
@@ -4272,7 +4272,7 @@ class Datasets:
                 # split the sample
                 text_tokens = self.tokenize_text(text_sample)
                 tok_count = len(text_tokens)
-                r = random.randint(0, tok_count - 1)
+                r = secrets.SystemRandom().randint(0, tok_count - 1)
                 t1 = self.tokenizer.decode(text_tokens[0:r])
                 t2 = self.tokenizer.decode(text_tokens[r:])
 
@@ -4405,13 +4405,13 @@ class Datasets:
         validation_text = []
 
         random_samples_list = []
-        first_entry = random.randint(0, len(output) - 1)
+        first_entry = secrets.SystemRandom().randint(0, len(output) - 1)
         random_samples_list.append(first_entry)
 
         for x in range(1, validation_count + testing_count):
             i = first_entry
             while i in random_samples_list:
-                i = random.randint(0, len(output) - 1)
+                i = secrets.SystemRandom().randint(0, len(output) - 1)
             random_samples_list.append(i)
 
         validation_adder = 0
