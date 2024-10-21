@@ -3598,7 +3598,7 @@ class WebSiteParser:
 
                 full_url = url_base + url_ext
 
-        r = requests.get(full_url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+        r = requests.get(full_url, stream=True, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
 
         return r.raw, r.status_code, full_url
 
