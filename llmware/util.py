@@ -2523,14 +2523,13 @@ class Graph:
         for b in range(0,len(my_bow_iter_list)):
 
             bow_file = my_bow_iter_list[b]
+            with open(os.path.join(dataset_fp,bow_file), mode="r", encoding="utf-8",errors="ignore") as bow_file_object:
 
-            bow_file_object = open(os.path.join(dataset_fp,bow_file), mode="r", encoding="utf-8",errors="ignore")
+                if b == 0:
+                    # skip ahead to the current byte index
+                    bow_file_object.seek(bow_byte_index,0)
 
-            if b == 0:
-                # skip ahead to the current byte index
-                bow_file_object.seek(bow_byte_index,0)
-
-            bow = bow_file_object.read().split("<")
+                bow = bow_file_object.read().split("<")
 
             last_found_block = 0
             doc_start = 1
@@ -2915,10 +2914,10 @@ class Datasets:
 
         # picks from first training file
         train_file = []
-        my_file = open(os.path.join(ds_folder, first_training_file), 'r', encoding='utf-8')
-        for lines in my_file:
-            new_row = json.loads(lines)
-            train_file.append(new_row)
+        with open(os.path.join(ds_folder, first_training_file), 'r', encoding='utf-8') as my_file:
+            for lines in my_file:
+                new_row = json.loads(lines)
+                train_file.append(new_row)
 
         if len(train_file) > sample_range:
             r = random.randint(0, sample_range)

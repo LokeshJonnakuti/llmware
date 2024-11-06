@@ -3173,10 +3173,10 @@ class ParserState:
         fp = os.path.join(self.parser_output_fp, fn)
 
         try:
-            my_file = open(fp, 'r', encoding='utf-8')
-            for lines in my_file:
-                new_row = json.loads(lines)
-                output.append(new_row)
+            with open(fp, 'r', encoding='utf-8') as my_file:
+                for lines in my_file:
+                    new_row = json.loads(lines)
+                    output.append(new_row)
 
         except:
             logging.info("warning: ParserState - could not find previous parse job record - %s ", prompt_id)
@@ -3287,13 +3287,12 @@ class PromptState:
         try:
             if clear_current_state:
                 self.prompt.interaction_history = []
-
-            my_file = open(fp, 'r', encoding='utf-8')
-            for lines in my_file:
-                new_row = json.loads(lines)
-                self.prompt.interaction_history.append(new_row)
-                self.prompt.prompt_id = prompt_id
-                output = self.prompt.interaction_history
+            with open(fp, 'r', encoding='utf-8') as my_file:
+                for lines in my_file:
+                    new_row = json.loads(lines)
+                    self.prompt.interaction_history.append(new_row)
+                    self.prompt.prompt_id = prompt_id
+                    output = self.prompt.interaction_history
 
         except:
             logging.info("update: PromptState - could not find previous prompt interaction state- %s ", prompt_id)
@@ -3311,10 +3310,10 @@ class PromptState:
         fp = os.path.join(self.prompt_path, fn)
 
         try:
-            my_file = open(fp, 'r', encoding='utf-8')
-            for lines in my_file:
-                new_row = json.loads(lines)
-                output.append(new_row)
+            with open(fp, 'r', encoding='utf-8') as my_file:
+                for lines in my_file:
+                    new_row = json.loads(lines)
+                    output.append(new_row)
         except:
             logging.info("warning: PromptState - could not find previous prompt interaction state- %s ", prompt_id)
             output = []
@@ -3505,24 +3504,23 @@ class PromptState:
 
                 fn = self.get_prompt_state_fn_from_id(prompt_id)
                 fp = os.path.join(self.prompt_path, fn)
+                with open(fp, 'r', encoding='utf-8') as my_file:
+                    for lines in my_file:
+                        new_row = json.loads(lines)
 
-                my_file = open(fp, 'r', encoding='utf-8')
-                for lines in my_file:
-                    new_row = json.loads(lines)
+                        # create new csv row
 
-                    # create new csv row
+                        csv_row = [prompt_id,
+                                   new_row["prompt"],
+                                   new_row["llm_response"],
+                                   new_row["instruction"],
+                                   new_row["evidence"],
+                                   new_row["model"],
+                                   new_row["time_stamp"]
+                                   ]
 
-                    csv_row = [prompt_id,
-                               new_row["prompt"],
-                               new_row["llm_response"],
-                               new_row["instruction"],
-                               new_row["evidence"],
-                               new_row["model"],
-                               new_row["time_stamp"]
-                               ]
-
-                    c.writerow(csv_row)
-                    result_count += 1
+                        c.writerow(csv_row)
+                        result_count += 1
 
         csvfile.close()
 
@@ -3680,22 +3678,22 @@ class QueryState:
         fp = os.path.join(self.query_path, fn)
 
         try:
-            my_file = open(fp, 'r', encoding='utf-8')
-            for lines in my_file:
-                new_row = json.loads(lines)
-                output.append(new_row)
+            with open(fp, 'r', encoding='utf-8') as my_file:
+                for lines in my_file:
+                    new_row = json.loads(lines)
+                    output.append(new_row)
 
-                if "doc_ID" in new_row:
-                    if new_row["doc_ID"] not in doc_id_list:
-                        doc_id_list.append(new_row["doc_ID"])
+                    if "doc_ID" in new_row:
+                        if new_row["doc_ID"] not in doc_id_list:
+                            doc_id_list.append(new_row["doc_ID"])
 
-                if "file_source" in new_row:
-                    if new_row["file_source"] not in doc_fn_list:
-                        doc_fn_list.append(new_row["file_source"])
+                    if "file_source" in new_row:
+                        if new_row["file_source"] not in doc_fn_list:
+                            doc_fn_list.append(new_row["file_source"])
 
-                if "query" in new_row:
-                    if new_row["query"] not in query_history:
-                        query_history.append(new_row["query"])
+                    if "query" in new_row:
+                        if new_row["query"] not in query_history:
+                            query_history.append(new_row["query"])
 
         except:
             logging.info("warning: QueryState - could not find previous query state- %s ", query_id)
